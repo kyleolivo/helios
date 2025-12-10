@@ -1,0 +1,26 @@
+version: 2
+updates:
+  # Enable version updates for Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    # Group updates to reduce PR noise
+    groups:
+      production-dependencies:
+        patterns:
+          - "openai"
+          - "python-dotenv"
+          - "pydantic"
+          - "pydantic-settings"
+          - "rich"
+          - "click"
+          - "httpx"
+          - "duckduckgo-search"
+      dev-dependencies:
+        patterns:
+          - "pytest*"
+          - "ruff"
+          - "mypy"
+
