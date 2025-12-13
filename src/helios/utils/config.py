@@ -1,6 +1,5 @@
 """Configuration management for Helios using Pydantic Settings."""
 
-from pathlib import Path
 from typing import Optional
 
 from pydantic import Field
