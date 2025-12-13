@@ -1,5 +1,6 @@
 """Configuration management for Helios using Pydantic Settings."""
 
+from functools import lru_cache
 from typing import Optional
 
 from pydantic import Field
@@ -58,8 +59,9 @@ class Settings(BaseSettings):
     )
 
 
+@lru_cache(maxsize=1)
 def get_settings() -> Settings:
-    """Get application settings.
+    """Get application settings (cached).
 
     Returns:
         Settings: Application settings loaded from environment.
@@ -70,17 +72,12 @@ def get_settings() -> Settings:
     return Settings()
 
 
-# Singleton instance for easy access
-_settings: Optional[Settings] = None
-
-
 def load_settings() -> Settings:
     """Load or return cached settings instance.
+
+    This is an alias for get_settings() for backward compatibility.
 
     Returns:
         Settings: Cached application settings.
     """
-    global _settings
-    if _settings is None:
-        _settings = get_settings()
-    return _settings
+    return get_settings()

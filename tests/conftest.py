@@ -48,17 +48,17 @@ def disable_dotenv():
 
 @pytest.fixture(autouse=True)
 def reset_settings_singleton():
-    """Reset the settings singleton before each test.
+    """Reset the settings cache before each test.
 
     This ensures tests don't interfere with each other by sharing
     cached settings instances.
     """
-    from helios.utils import config
+    from helios.utils.config import get_settings
 
-    original_settings = config._settings
-    config._settings = None
+    # Clear the lru_cache to ensure fresh settings for each test
+    get_settings.cache_clear()
 
     yield
 
-    # Restore original state after test
-    config._settings = original_settings
+    # Clear cache again after test
+    get_settings.cache_clear()

@@ -1,7 +1,7 @@
 """LLM client abstractions for interacting with language models."""
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Generator, Optional
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletion
@@ -41,7 +41,7 @@ class LLM(ABC):
         conversation: Conversation,
         max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
-    ) -> str:
+    ) -> Generator[str, None, None]:
         """Generate a response from the LLM with streaming.
 
         Args:
@@ -116,7 +116,7 @@ class OpenRouterLLM(LLM):
         )
 
         # Extract the response text
-        if response.choices and len(response.choices) > 0:
+        if response.choices:
             content = response.choices[0].message.content
             return content if content else ""
 
@@ -127,7 +127,7 @@ class OpenRouterLLM(LLM):
         conversation: Conversation,
         max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
-    ) -> str:
+    ) -> Generator[str, None, None]:
         """Generate a response from the LLM with streaming via Open Router.
 
         Args:
@@ -150,7 +150,7 @@ class OpenRouterLLM(LLM):
         )
 
         for chunk in stream:
-            if chunk.choices and len(chunk.choices) > 0:
+            if chunk.choices:
                 delta = chunk.choices[0].delta
                 if delta.content:
                     yield delta.content

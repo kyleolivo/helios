@@ -22,6 +22,8 @@ class Message(BaseModel):
         content: The content of the message.
     """
 
+    model_config = {"frozen": True}
+
     role: MessageRole
     content: str
 
