@@ -1,13 +1,14 @@
 """Pytest configuration and shared fixtures."""
 
 import os
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 
 @pytest.fixture(autouse=True, scope="session")
-def disable_dotenv():
+def disable_dotenv() -> Iterator[None]:
     """Disable .env file loading during tests.
 
     This prevents the .env file from affecting test behavior.
@@ -47,18 +48,18 @@ def disable_dotenv():
 
 
 @pytest.fixture(autouse=True)
-def reset_settings_singleton():
+def reset_settings_singleton() -> Iterator[None]:
     """Reset the settings singleton before each test.
 
     This ensures tests don't interfere with each other by sharing
     cached settings instances.
     """
-    from helios.utils import config
+    from helios.utils.config import reset_settings
 
-    original_settings = config._settings
-    config._settings = None
+    # Reset settings before each test
+    reset_settings()
 
     yield
 
-    # Restore original state after test
-    config._settings = original_settings
+    # Reset again after test to ensure clean state
+    reset_settings()

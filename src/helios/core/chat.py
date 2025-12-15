@@ -1,6 +1,6 @@
 """Chat session management for interactive conversations."""
 
-from typing import Optional
+from collections.abc import Iterator
 
 from helios.core.llm import LLM
 from helios.core.types import Conversation, MessageRole
@@ -12,7 +12,7 @@ class ChatSession:
     Handles conversation state, message history, and streaming responses.
     """
 
-    def __init__(self, llm: LLM, system_prompt: Optional[str] = None) -> None:
+    def __init__(self, llm: LLM, system_prompt: str | None = None) -> None:
         """Initialize a chat session.
 
         Args:
@@ -39,7 +39,7 @@ class ChatSession:
         self.conversation.add_assistant_message(response)
         return response
 
-    def send_message_streaming(self, message: str):
+    def send_message_streaming(self, message: str) -> Iterator[str]:
         """Send a message and stream the response.
 
         Args:
@@ -69,8 +69,7 @@ class ChatSession:
         if keep_system:
             # Save system messages
             system_messages = [
-                msg for msg in self.conversation.messages
-                if msg.role == MessageRole.SYSTEM
+                msg for msg in self.conversation.messages if msg.role == MessageRole.SYSTEM
             ]
             self.conversation.clear()
             # Restore system messages
@@ -93,7 +92,4 @@ class ChatSession:
         Returns:
             List of (role, content) tuples for all messages.
         """
-        return [
-            (msg.role.value, msg.content)
-            for msg in self.conversation.messages
-        ]
+        return [(msg.role.value, msg.content) for msg in self.conversation.messages]

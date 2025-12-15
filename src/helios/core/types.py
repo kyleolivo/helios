@@ -1,8 +1,9 @@
 """Data models for the Helios AI agent."""
 
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
+from openai.types.chat import ChatCompletionMessageParam
 from pydantic import BaseModel, Field
 
 
@@ -70,13 +71,14 @@ class Conversation(BaseModel):
         """
         self.add_message(MessageRole.SYSTEM, content)
 
-    def to_dict(self) -> list[dict[str, str]]:
+    def to_dict(self) -> list[ChatCompletionMessageParam]:
         """Convert conversation to OpenAI/Open Router API format.
 
         Returns:
-            List of message dictionaries with 'role' and 'content' keys.
+            List of message dictionaries compatible with OpenAI SDK types.
         """
-        return [{"role": msg.role.value, "content": msg.content} for msg in self.messages]
+        messages = [{"role": msg.role.value, "content": msg.content} for msg in self.messages]
+        return cast(list[ChatCompletionMessageParam], messages)
 
     def clear(self) -> None:
         """Clear all messages from the conversation."""

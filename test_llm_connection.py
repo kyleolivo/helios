@@ -10,7 +10,7 @@ Before running this script:
 """
 
 from helios.core.llm import create_llm
-from helios.core.types import Conversation, MessageRole
+from helios.core.types import Conversation
 from helios.utils.config import load_settings
 
 
@@ -22,7 +22,7 @@ def main() -> None:
     # Load settings from .env
     try:
         settings = load_settings()
-        print(f"✓ Settings loaded successfully")
+        print("✓ Settings loaded successfully")
         print(f"  Model: {settings.default_model}")
         print(f"  Max tokens: {settings.max_tokens}")
         print(f"  Temperature: {settings.temperature}")
@@ -35,7 +35,7 @@ def main() -> None:
 
     # Create LLM client
     llm = create_llm(settings)
-    print(f"✓ LLM client created")
+    print("✓ LLM client created")
 
     # Create a simple conversation
     conversation = Conversation()
@@ -47,7 +47,7 @@ def main() -> None:
     # Test basic generation
     try:
         response = llm.generate(conversation)
-        print(f"✓ Received response!")
+        print("✓ Received response!")
         print(f"\n🤖 Assistant: {response}")
         print("-" * 50)
     except Exception as e:

@@ -1,7 +1,5 @@
 """Configuration management for Helios using Pydantic Settings."""
 
-from typing import Optional
-
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -39,7 +37,7 @@ class Settings(BaseSettings):
         description="Application name for Open Router tracking",
     )
 
-    site_url: Optional[str] = Field(
+    site_url: str | None = Field(
         default=None,
         description="Site URL for Open Router analytics",
     )
@@ -71,7 +69,7 @@ def get_settings() -> Settings:
 
 
 # Singleton instance for easy access
-_settings: Optional[Settings] = None
+_settings: Settings | None = None
 
 
 def load_settings() -> Settings:
@@ -84,3 +82,13 @@ def load_settings() -> Settings:
     if _settings is None:
         _settings = get_settings()
     return _settings
+
+
+def reset_settings() -> None:
+    """Reset cached settings instance.
+
+    This is primarily useful for testing to ensure a clean state
+    between test runs.
+    """
+    global _settings
+    _settings = None

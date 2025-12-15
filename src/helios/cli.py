@@ -86,10 +86,7 @@ def chat(model: str | None, system_prompt: str | None) -> None:
             "You are Helios, a helpful AI assistant. "
             "You are knowledgeable, concise, and friendly."
         )
-        session = ChatSession(
-            llm,
-            system_prompt=system_prompt or default_system_prompt
-        )
+        session = ChatSession(llm, system_prompt=system_prompt or default_system_prompt)
 
         # Print welcome message
         print_welcome()

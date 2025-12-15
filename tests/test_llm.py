@@ -1,53 +1,63 @@
 """Tests for LLM client abstractions."""
 
-from unittest.mock import MagicMock, Mock, patch
+from collections.abc import Iterator
+from unittest.mock import MagicMock, patch
 
 import pytest
 from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
-from openai.types.chat.chat_completion_chunk import ChatCompletionChunk
+from openai.types.chat.chat_completion_chunk import ChatCompletionChunk, ChoiceDelta
 from openai.types.chat.chat_completion_chunk import Choice as StreamChoice
-from openai.types.chat.chat_completion_chunk import ChoiceDelta
 
 from helios.core.llm import LLM, OpenRouterLLM, create_llm
-from helios.core.types import Conversation, MessageRole
+from helios.core.types import Conversation
 from helios.utils.config import Settings
 
 
 class TestLLMAbstractClass:
     """Tests for LLM abstract base class."""
 
-    def test_cannot_instantiate_abstract_class(self):
+    def test_cannot_instantiate_abstract_class(self) -> None:
         """Test that LLM abstract class cannot be instantiated."""
         with pytest.raises(TypeError):
-            LLM()
+            LLM()  # type: ignore[abstract]
 
-    def test_subclass_must_implement_generate(self):
+    def test_subclass_must_implement_generate(self) -> None:
         """Test that subclass must implement generate method."""
 
         class IncompleteLLM(LLM):
-            def generate_streaming(self, conversation, max_tokens=None, temperature=None):
-                pass
+            def generate_streaming(
+                self,
+                conversation: Conversation,
+                max_tokens: int | None = None,
+                temperature: float | None = None,
+            ) -> Iterator[str]:
+                yield ""
 
         with pytest.raises(TypeError):
-            IncompleteLLM()
+            IncompleteLLM()  # type: ignore[abstract]
 
-    def test_subclass_must_implement_generate_streaming(self):
+    def test_subclass_must_implement_generate_streaming(self) -> None:
         """Test that subclass must implement generate_streaming method."""
 
         class IncompleteLLM(LLM):
-            def generate(self, conversation, max_tokens=None, temperature=None):
+            def generate(
+                self,
+                conversation: Conversation,
+                max_tokens: int | None = None,
+                temperature: float | None = None,
+            ) -> str:
                 return "test"
 
         with pytest.raises(TypeError):
-            IncompleteLLM()
+            IncompleteLLM()  # type: ignore[abstract]
 
 
 class TestOpenRouterLLM:
     """Tests for OpenRouterLLM implementation."""
 
     @pytest.fixture
-    def settings(self):
+    def settings(self) -> Settings:
         """Create test settings."""
         return Settings(
             openrouter_api_key="test-api-key",
@@ -59,26 +69,26 @@ class TestOpenRouterLLM:
         )
 
     @pytest.fixture
-    def conversation(self):
+    def conversation(self) -> Conversation:
         """Create test conversation."""
         conv = Conversation()
         conv.add_system_message("You are helpful")
         conv.add_user_message("Hello")
         return conv
 
-    def test_init_with_default_model(self, settings):
+    def test_init_with_default_model(self, settings: Settings) -> None:
         """Test initializing OpenRouterLLM with default model."""
         llm = OpenRouterLLM(settings)
         assert llm.model == "test-model"
         assert llm.settings == settings
 
-    def test_init_with_custom_model(self, settings):
+    def test_init_with_custom_model(self, settings: Settings) -> None:
         """Test initializing OpenRouterLLM with custom model."""
         llm = OpenRouterLLM(settings, model="custom-model")
         assert llm.model == "custom-model"
         assert llm.settings == settings
 
-    def test_client_initialization(self, settings):
+    def test_client_initialization(self, settings: Settings) -> None:
         """Test that OpenAI client is initialized with correct settings."""
         llm = OpenRouterLLM(settings)
 
@@ -86,7 +96,9 @@ class TestOpenRouterLLM:
         assert llm.client.api_key == "test-api-key"
 
     @patch("helios.core.llm.OpenAI")
-    def test_generate(self, mock_openai_class, settings, conversation):
+    def test_generate(
+        self, mock_openai_class: MagicMock, settings: Settings, conversation: Conversation
+    ) -> None:
         """Test generate method with mocked API response."""
         # Create mock response
         mock_message = ChatCompletionMessage(role="assistant", content="Hello there!")
@@ -121,7 +133,9 @@ class TestOpenRouterLLM:
         )
 
     @patch("helios.core.llm.OpenAI")
-    def test_generate_with_custom_params(self, mock_openai_class, settings, conversation):
+    def test_generate_with_custom_params(
+        self, mock_openai_class: MagicMock, settings: Settings, conversation: Conversation
+    ) -> None:
         """Test generate method with custom max_tokens and temperature."""
         mock_message = ChatCompletionMessage(role="assistant", content="Response")
         mock_choice = Choice(
@@ -153,7 +167,9 @@ class TestOpenRouterLLM:
         )
 
     @patch("helios.core.llm.OpenAI")
-    def test_generate_with_temperature_zero(self, mock_openai_class, settings, conversation):
+    def test_generate_with_temperature_zero(
+        self, mock_openai_class: MagicMock, settings: Settings, conversation: Conversation
+    ) -> None:
         """Test that temperature=0 is passed correctly (not treated as None)."""
         mock_message = ChatCompletionMessage(role="assistant", content="Response")
         mock_choice = Choice(
@@ -181,7 +197,9 @@ class TestOpenRouterLLM:
         assert call_kwargs["temperature"] == 0.0
 
     @patch("helios.core.llm.OpenAI")
-    def test_generate_empty_response(self, mock_openai_class, settings, conversation):
+    def test_generate_empty_response(
+        self, mock_openai_class: MagicMock, settings: Settings, conversation: Conversation
+    ) -> None:
         """Test generate handles empty response."""
         mock_response = ChatCompletion(
             id="test-id",
@@ -201,7 +219,9 @@ class TestOpenRouterLLM:
         assert response == ""
 
     @patch("helios.core.llm.OpenAI")
-    def test_generate_none_content(self, mock_openai_class, settings, conversation):
+    def test_generate_none_content(
+        self, mock_openai_class: MagicMock, settings: Settings, conversation: Conversation
+    ) -> None:
         """Test generate handles None content."""
         mock_message = ChatCompletionMessage(role="assistant", content=None)
         mock_choice = Choice(
@@ -227,7 +247,9 @@ class TestOpenRouterLLM:
         assert response == ""
 
     @patch("helios.core.llm.OpenAI")
-    def test_generate_streaming(self, mock_openai_class, settings, conversation):
+    def test_generate_streaming(
+        self, mock_openai_class: MagicMock, settings: Settings, conversation: Conversation
+    ) -> None:
         """Test generate_streaming method."""
         # Create mock streaming chunks
         chunk1 = ChatCompletionChunk(
@@ -287,7 +309,9 @@ class TestOpenRouterLLM:
         )
 
     @patch("helios.core.llm.OpenAI")
-    def test_generate_streaming_with_custom_params(self, mock_openai_class, settings, conversation):
+    def test_generate_streaming_with_custom_params(
+        self, mock_openai_class: MagicMock, settings: Settings, conversation: Conversation
+    ) -> None:
         """Test generate_streaming with custom parameters."""
         mock_chunk = ChatCompletionChunk(
             id="test-id",
@@ -319,7 +343,9 @@ class TestOpenRouterLLM:
         )
 
     @patch("helios.core.llm.OpenAI")
-    def test_generate_streaming_skips_empty_chunks(self, mock_openai_class, settings, conversation):
+    def test_generate_streaming_skips_empty_chunks(
+        self, mock_openai_class: MagicMock, settings: Settings, conversation: Conversation
+    ) -> None:
         """Test that generate_streaming skips chunks without content."""
         chunk_with_content = ChatCompletionChunk(
             id="test-id",
@@ -364,7 +390,7 @@ class TestOpenRouterLLM:
 class TestCreateLLM:
     """Tests for create_llm factory function."""
 
-    def test_create_llm_returns_openrouter(self):
+    def test_create_llm_returns_openrouter(self) -> None:
         """Test that create_llm returns OpenRouterLLM instance."""
         settings = Settings(openrouter_api_key="test-key")
         llm = create_llm(settings)
@@ -372,16 +398,18 @@ class TestCreateLLM:
         assert isinstance(llm, OpenRouterLLM)
         assert isinstance(llm, LLM)
 
-    def test_create_llm_with_default_model(self):
+    def test_create_llm_with_default_model(self) -> None:
         """Test create_llm uses default model from settings."""
         settings = Settings(openrouter_api_key="test-key", default_model="default-model")
         llm = create_llm(settings)
 
+        assert isinstance(llm, OpenRouterLLM)
         assert llm.model == "default-model"
 
-    def test_create_llm_with_custom_model(self):
+    def test_create_llm_with_custom_model(self) -> None:
         """Test create_llm with custom model override."""
         settings = Settings(openrouter_api_key="test-key", default_model="default-model")
         llm = create_llm(settings, model="custom-model")
 
+        assert isinstance(llm, OpenRouterLLM)
         assert llm.model == "custom-model"

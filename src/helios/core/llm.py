@@ -1,7 +1,7 @@
 """LLM client abstractions for interacting with language models."""
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from collections.abc import Iterator
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletion
@@ -17,8 +17,8 @@ class LLM(ABC):
     def generate(
         self,
         conversation: Conversation,
-        max_tokens: Optional[int] = None,
-        temperature: Optional[float] = None,
+        max_tokens: int | None = None,
+        temperature: float | None = None,
     ) -> str:
         """Generate a response from the LLM.
 
@@ -39,9 +39,9 @@ class LLM(ABC):
     def generate_streaming(
         self,
         conversation: Conversation,
-        max_tokens: Optional[int] = None,
-        temperature: Optional[float] = None,
-    ) -> str:
+        max_tokens: int | None = None,
+        temperature: float | None = None,
+    ) -> Iterator[str]:
         """Generate a response from the LLM with streaming.
 
         Args:
@@ -68,7 +68,7 @@ class OpenRouterLLM(LLM):
     def __init__(
         self,
         settings: Settings,
-        model: Optional[str] = None,
+        model: str | None = None,
     ) -> None:
         """Initialize the Open Router LLM client.
 
@@ -92,8 +92,8 @@ class OpenRouterLLM(LLM):
     def generate(
         self,
         conversation: Conversation,
-        max_tokens: Optional[int] = None,
-        temperature: Optional[float] = None,
+        max_tokens: int | None = None,
+        temperature: float | None = None,
     ) -> str:
         """Generate a response from the LLM via Open Router.
 
@@ -125,9 +125,9 @@ class OpenRouterLLM(LLM):
     def generate_streaming(
         self,
         conversation: Conversation,
-        max_tokens: Optional[int] = None,
-        temperature: Optional[float] = None,
-    ) -> str:
+        max_tokens: int | None = None,
+        temperature: float | None = None,
+    ) -> Iterator[str]:
         """Generate a response from the LLM with streaming via Open Router.
 
         Args:
@@ -156,7 +156,7 @@ class OpenRouterLLM(LLM):
                     yield delta.content
 
 
-def create_llm(settings: Settings, model: Optional[str] = None) -> LLM:
+def create_llm(settings: Settings, model: str | None = None) -> LLM:
     """Factory function to create an LLM client.
 
     Args:

@@ -12,21 +12,21 @@ class TestChatSession:
     """Tests for ChatSession class."""
 
     @pytest.fixture
-    def mock_llm(self):
+    def mock_llm(self) -> MagicMock:
         """Create a mock LLM."""
         llm = MagicMock()
         llm.generate.return_value = "Test response"
         llm.generate_streaming.return_value = iter(["Test ", "response"])
         return llm
 
-    def test_init_without_system_prompt(self, mock_llm):
+    def test_init_without_system_prompt(self, mock_llm: MagicMock) -> None:
         """Test creating session without system prompt."""
         session = ChatSession(mock_llm)
 
         assert session.llm == mock_llm
         assert len(session.conversation) == 0
 
-    def test_init_with_system_prompt(self, mock_llm):
+    def test_init_with_system_prompt(self, mock_llm: MagicMock) -> None:
         """Test creating session with system prompt."""
         session = ChatSession(mock_llm, system_prompt="You are helpful")
 
@@ -34,7 +34,7 @@ class TestChatSession:
         assert session.conversation.messages[0].role == MessageRole.SYSTEM
         assert session.conversation.messages[0].content == "You are helpful"
 
-    def test_send_message(self, mock_llm):
+    def test_send_message(self, mock_llm: MagicMock) -> None:
         """Test sending a message and getting response."""
         session = ChatSession(mock_llm)
         response = session.send_message("Hello")
@@ -46,7 +46,7 @@ class TestChatSession:
         assert session.conversation.messages[1].role == MessageRole.ASSISTANT
         assert session.conversation.messages[1].content == "Test response"
 
-    def test_send_message_updates_conversation(self, mock_llm):
+    def test_send_message_updates_conversation(self, mock_llm: MagicMock) -> None:
         """Test that conversation history is updated correctly."""
         session = ChatSession(mock_llm)
 
@@ -62,7 +62,7 @@ class TestChatSession:
         assert session.conversation.messages[2].content == "Second message"
         assert session.conversation.messages[3].content == "Test response"
 
-    def test_send_message_streaming(self, mock_llm):
+    def test_send_message_streaming(self, mock_llm: MagicMock) -> None:
         """Test streaming message response."""
         session = ChatSession(mock_llm)
         chunks = list(session.send_message_streaming("Hello"))
@@ -73,7 +73,7 @@ class TestChatSession:
         assert session.conversation.messages[1].role == MessageRole.ASSISTANT
         assert session.conversation.messages[1].content == "Test response"
 
-    def test_send_message_streaming_builds_full_response(self, mock_llm):
+    def test_send_message_streaming_builds_full_response(self, mock_llm: MagicMock) -> None:
         """Test that streaming correctly builds full response."""
         mock_llm.generate_streaming.return_value = iter(["Hello", " ", "world", "!"])
         session = ChatSession(mock_llm)
@@ -84,7 +84,7 @@ class TestChatSession:
         # Check that full response was added to history
         assert session.conversation.messages[1].content == "Hello world!"
 
-    def test_clear_history_keep_system(self, mock_llm):
+    def test_clear_history_keep_system(self, mock_llm: MagicMock) -> None:
         """Test clearing history while keeping system messages."""
         session = ChatSession(mock_llm, system_prompt="You are helpful")
         session.send_message("Hello")
@@ -97,7 +97,7 @@ class TestChatSession:
         assert session.conversation.messages[0].role == MessageRole.SYSTEM
         assert session.conversation.messages[0].content == "You are helpful"
 
-    def test_clear_history_remove_all(self, mock_llm):
+    def test_clear_history_remove_all(self, mock_llm: MagicMock) -> None:
         """Test clearing all history including system messages."""
         session = ChatSession(mock_llm, system_prompt="You are helpful")
         session.send_message("Hello")
@@ -108,7 +108,7 @@ class TestChatSession:
 
         assert len(session.conversation) == 0
 
-    def test_clear_history_multiple_system_messages(self, mock_llm):
+    def test_clear_history_multiple_system_messages(self, mock_llm: MagicMock) -> None:
         """Test that clearing preserves all system messages."""
         session = ChatSession(mock_llm)
         session.conversation.add_system_message("First system message")
@@ -122,7 +122,7 @@ class TestChatSession:
         assert len(session.conversation) == 2
         assert all(msg.role == MessageRole.SYSTEM for msg in session.conversation.messages)
 
-    def test_get_message_count(self, mock_llm):
+    def test_get_message_count(self, mock_llm: MagicMock) -> None:
         """Test getting message count."""
         session = ChatSession(mock_llm)
 
@@ -134,7 +134,7 @@ class TestChatSession:
         session.send_message("Another message")
         assert session.get_message_count() == 4
 
-    def test_get_message_count_with_system(self, mock_llm):
+    def test_get_message_count_with_system(self, mock_llm: MagicMock) -> None:
         """Test message count includes system messages."""
         session = ChatSession(mock_llm, system_prompt="System")
 
@@ -143,7 +143,7 @@ class TestChatSession:
         session.send_message("Hello")
         assert session.get_message_count() == 3  # system + user + assistant
 
-    def test_get_history(self, mock_llm):
+    def test_get_history(self, mock_llm: MagicMock) -> None:
         """Test getting conversation history."""
         session = ChatSession(mock_llm, system_prompt="You are helpful")
         session.send_message("Hello")
@@ -155,14 +155,14 @@ class TestChatSession:
         assert history[1] == ("user", "Hello")
         assert history[2] == ("assistant", "Test response")
 
-    def test_get_history_empty(self, mock_llm):
+    def test_get_history_empty(self, mock_llm: MagicMock) -> None:
         """Test getting history from empty conversation."""
         session = ChatSession(mock_llm)
         history = session.get_history()
 
         assert history == []
 
-    def test_multiple_conversations(self, mock_llm):
+    def test_multiple_conversations(self, mock_llm: MagicMock) -> None:
         """Test multiple back-and-forth messages."""
         session = ChatSession(mock_llm)
 
