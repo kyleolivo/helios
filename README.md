@@ -32,11 +32,16 @@ cd helios
 # Install uv if you haven't already
 brew install uv
 
-# Sync dependencies
-uv sync
+# Sync dependencies (includes dev dependencies)
+uv sync --all-extras
 ```
 
-3. Configure your environment:
+3. Set up pre-commit hooks (automatically runs linter, type checker, and tests before commits):
+```bash
+uv run pre-commit install
+```
+
+4. Configure your environment:
 ```bash
 # Copy the example environment file
 cp .env.example .env
@@ -45,7 +50,7 @@ cp .env.example .env
 # Get a free key from: https://openrouter.ai/keys
 ```
 
-4. Test the LLM connection:
+5. Test the LLM connection:
 ```bash
 uv run python test_llm_connection.py
 ```
