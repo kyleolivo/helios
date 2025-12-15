@@ -119,7 +119,7 @@ def chat(model: str | None, system_prompt: str | None) -> None:
                 # Send message and stream response
                 # Use status spinner while streaming
                 response_chunks = []
-                with console.status("[bold green]Thinking...", spinner="dots"):
+                with console.status("[bold green]Thinking...[/bold green]", spinner="dots"):
                     for chunk in session.send_message_streaming(user_input):
                         response_chunks.append(chunk)
 
