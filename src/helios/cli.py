@@ -6,7 +6,6 @@ import click
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
-from rich.prompt import Prompt
 
 from helios.core.chat import ChatSession
 from helios.core.llm import create_llm
@@ -95,7 +94,8 @@ def chat(model: str | None, system_prompt: str | None) -> None:
         while True:
             try:
                 # Get user input
-                user_input = Prompt.ask("[bold blue]You[/bold blue]")
+                console.print("[bold blue]You:[/bold blue]")
+                user_input = console.input()
 
                 # Handle empty input
                 if not user_input.strip():
@@ -117,15 +117,17 @@ def chat(model: str | None, system_prompt: str | None) -> None:
                     continue
 
                 # Send message and stream response
-                console.print("[bold green]Assistant:[/bold green] ", end="")
-
-                # Stream the response
+                # Use status spinner while streaming
                 response_chunks = []
-                for chunk in session.send_message_streaming(user_input):
-                    console.print(chunk, end="")
-                    response_chunks.append(chunk)
+                with console.status("[bold green]Thinking...", spinner="dots"):
+                    for chunk in session.send_message_streaming(user_input):
+                        response_chunks.append(chunk)
 
-                console.print("\n")  # New line after response
+                # Build complete response and render with markdown
+                full_response = "".join(response_chunks)
+                console.print("[bold green]Assistant:[/bold green]")
+                console.print(Markdown(full_response))
+                console.print()  # Extra line for spacing
 
             except KeyboardInterrupt:
                 console.print("\n\n[yellow]Goodbye! 👋[/yellow]\n")
