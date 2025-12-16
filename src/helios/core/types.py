@@ -21,10 +21,14 @@ class Message(BaseModel):
     Attributes:
         role: The role of the message sender (system, user, or assistant).
         content: The content of the message.
+        tool_calls: Optional tool calls made by assistant (for function calling).
+        tool_call_id: Optional ID when this message is a tool result.
     """
 
     role: MessageRole
     content: str
+    tool_calls: list[dict[str, Any]] | None = None
+    tool_call_id: str | None = None
 
 
 class Conversation(BaseModel):
@@ -77,7 +81,21 @@ class Conversation(BaseModel):
         Returns:
             List of message dictionaries compatible with OpenAI SDK types.
         """
-        messages = [{"role": msg.role.value, "content": msg.content} for msg in self.messages]
+        messages = []
+        for msg in self.messages:
+            # Determine role - tool messages need role="tool"
+            role = "tool" if msg.tool_call_id else msg.role.value
+
+            message_dict: dict[str, Any] = {
+                "role": role,
+                "content": msg.content,
+            }
+            # Add optional tool-related fields if present
+            if msg.tool_calls:
+                message_dict["tool_calls"] = msg.tool_calls
+            if msg.tool_call_id:
+                message_dict["tool_call_id"] = msg.tool_call_id
+            messages.append(message_dict)
         return cast(list[ChatCompletionMessageParam], messages)
 
     def clear(self) -> None:

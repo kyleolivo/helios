@@ -14,7 +14,7 @@ dependencies = [
     "rich>=13.9.0",                # Beautiful terminal output
     "click>=8.1.0",                # CLI framework
     "httpx>=0.28.0",               # Async HTTP client
-    "duckduckgo-search>=7.0.0",    # Web search tool
+    "ddgs>=1.0.0",                 # Web search tool (formerly duckduckgo-search)
 ]
 
 [project.optional-dependencies]

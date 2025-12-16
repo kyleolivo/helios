@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 
 from helios.tools.base import Tool, ToolParameter, ToolResult
 

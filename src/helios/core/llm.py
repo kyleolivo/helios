@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
+from typing import Any
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletion
@@ -19,16 +20,18 @@ class LLM(ABC):
         conversation: Conversation,
         max_tokens: int | None = None,
         temperature: float | None = None,
-    ) -> str:
+        tools: list[dict[str, Any]] | None = None,
+    ) -> ChatCompletion:
         """Generate a response from the LLM.
 
         Args:
             conversation: The conversation history to send to the LLM.
             max_tokens: Maximum tokens for the response (overrides config).
             temperature: Temperature for sampling (overrides config).
+            tools: Optional list of tool schemas for function calling.
 
         Returns:
-            The generated response text.
+            The complete ChatCompletion response (includes text and tool calls).
 
         Raises:
             Exception: If the API call fails.
@@ -94,33 +97,35 @@ class OpenRouterLLM(LLM):
         conversation: Conversation,
         max_tokens: int | None = None,
         temperature: float | None = None,
-    ) -> str:
+        tools: list[dict[str, Any]] | None = None,
+    ) -> ChatCompletion:
         """Generate a response from the LLM via Open Router.
 
         Args:
             conversation: The conversation history to send to the LLM.
             max_tokens: Maximum tokens for the response (overrides config).
             temperature: Temperature for sampling (overrides config).
+            tools: Optional list of tool schemas for function calling.
 
         Returns:
-            The generated response text.
+            The complete ChatCompletion response (includes text and tool calls).
 
         Raises:
             Exception: If the API call fails.
         """
-        response: ChatCompletion = self.client.chat.completions.create(
-            model=self.model,
-            messages=conversation.to_dict(),
-            max_tokens=max_tokens or self.settings.max_tokens,
-            temperature=temperature if temperature is not None else self.settings.temperature,
-        )
+        kwargs: dict[str, Any] = {
+            "model": self.model,
+            "messages": conversation.to_dict(),
+            "max_tokens": max_tokens or self.settings.max_tokens,
+            "temperature": temperature if temperature is not None else self.settings.temperature,
+        }
 
-        # Extract the response text
-        if response.choices and len(response.choices) > 0:
-            content = response.choices[0].message.content
-            return content if content else ""
+        # Add tools if provided
+        if tools:
+            kwargs["tools"] = tools
 
-        return ""
+        response: ChatCompletion = self.client.chat.completions.create(**kwargs)
+        return response
 
     def generate_streaming(
         self,

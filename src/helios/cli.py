@@ -9,6 +9,7 @@ from rich.panel import Panel
 
 from helios.core.chat import ChatSession
 from helios.core.llm import create_llm
+from helios.tools.registry import create_default_registry
 from helios.utils.config import load_settings
 
 console = Console()
@@ -26,6 +27,11 @@ An AI agent built from scratch to understand agent fundamentals.
 - `/clear` - Clear conversation history
 - `/help` - Show this help message
 - `Ctrl+C` - Exit the chat
+
+**Available Tools:**
+- `calculator` - Perform mathematical calculations
+- `datetime` - Get current date and time
+- `web_search` - Search the web using DuckDuckGo
 
 Type your message and press Enter to chat!
 """
@@ -80,12 +86,21 @@ def chat(model: str | None, system_prompt: str | None) -> None:
         settings = load_settings()
         llm = create_llm(settings, model=model)
 
-        # Create chat session
+        # Create tool registry with default tools
+        tool_registry = create_default_registry()
+
+        # Create chat session with tools
         default_system_prompt = (
-            "You are Helios, a helpful AI assistant. "
-            "You are knowledgeable, concise, and friendly."
+            "You are Helios, a helpful AI assistant with access to tools. "
+            "You are knowledgeable, concise, and friendly. "
+            "When you need to perform calculations, get the current time, or search for information, "
+            "use the available tools."
         )
-        session = ChatSession(llm, system_prompt=system_prompt or default_system_prompt)
+        session = ChatSession(
+            llm,
+            system_prompt=system_prompt or default_system_prompt,
+            tool_registry=tool_registry,
+        )
 
         # Print welcome message
         print_welcome()
@@ -116,17 +131,16 @@ def chat(model: str | None, system_prompt: str | None) -> None:
                     console.print()
                     continue
 
-                # Send message and stream response
-                # Use status spinner while streaming
-                response_chunks = []
+                # Send message and get response (with tool calling support)
                 with console.status("[bold green]Thinking...[/bold green]", spinner="dots"):
-                    for chunk in session.send_message_streaming(user_input):
-                        response_chunks.append(chunk)
+                    response = session.send_message(user_input)
 
-                # Build complete response and render with markdown
-                full_response = "".join(response_chunks)
+                # Display response with markdown formatting
                 console.print("[bold green]Assistant:[/bold green]")
-                console.print(Markdown(full_response))
+                if response:
+                    console.print(Markdown(response))
+                else:
+                    console.print("[dim]No response[/dim]")
                 console.print()  # Extra line for spacing
 
             except KeyboardInterrupt:

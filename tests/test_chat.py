@@ -3,9 +3,35 @@
 from unittest.mock import MagicMock
 
 import pytest
+from openai.types.chat import ChatCompletion, ChatCompletionMessage
+from openai.types.chat.chat_completion import Choice
 
 from helios.core.chat import ChatSession
 from helios.core.types import MessageRole
+
+
+def create_mock_completion(content: str) -> ChatCompletion:
+    """Create a mock ChatCompletion object.
+
+    Args:
+        content: The response content.
+
+    Returns:
+        A mock ChatCompletion with the given content.
+    """
+    message = ChatCompletionMessage(role="assistant", content=content)
+    choice = Choice(
+        finish_reason="stop",
+        index=0,
+        message=message,
+    )
+    return ChatCompletion(
+        id="test-id",
+        choices=[choice],
+        created=1234567890,
+        model="test-model",
+        object="chat.completion",
+    )
 
 
 class TestChatSession:
@@ -15,7 +41,7 @@ class TestChatSession:
     def mock_llm(self) -> MagicMock:
         """Create a mock LLM."""
         llm = MagicMock()
-        llm.generate.return_value = "Test response"
+        llm.generate.return_value = create_mock_completion("Test response")
         llm.generate_streaming.return_value = iter(["Test ", "response"])
         return llm
 

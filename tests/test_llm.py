@@ -1,6 +1,7 @@
 """Tests for LLM client abstractions."""
 
 from collections.abc import Iterator
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -46,8 +47,15 @@ class TestLLMAbstractClass:
                 conversation: Conversation,
                 max_tokens: int | None = None,
                 temperature: float | None = None,
-            ) -> str:
-                return "test"
+                tools: list[dict[str, Any]] | None = None,
+            ) -> ChatCompletion:
+                return ChatCompletion(
+                    id="test",
+                    choices=[],
+                    created=0,
+                    model="test",
+                    object="chat.completion",
+                )
 
         with pytest.raises(TypeError):
             IncompleteLLM()  # type: ignore[abstract]
@@ -124,7 +132,8 @@ class TestOpenRouterLLM:
         llm = OpenRouterLLM(settings)
         response = llm.generate(conversation)
 
-        assert response == "Hello there!"
+        assert isinstance(response, ChatCompletion)
+        assert response.choices[0].message.content == "Hello there!"
         mock_client.chat.completions.create.assert_called_once_with(
             model="test-model",
             messages=conversation.to_dict(),
@@ -158,7 +167,8 @@ class TestOpenRouterLLM:
         llm = OpenRouterLLM(settings)
         response = llm.generate(conversation, max_tokens=1024, temperature=0.5)
 
-        assert response == "Response"
+        assert isinstance(response, ChatCompletion)
+        assert response.choices[0].message.content == "Response"
         mock_client.chat.completions.create.assert_called_once_with(
             model="test-model",
             messages=conversation.to_dict(),
@@ -216,7 +226,8 @@ class TestOpenRouterLLM:
         llm = OpenRouterLLM(settings)
         response = llm.generate(conversation)
 
-        assert response == ""
+        assert isinstance(response, ChatCompletion)
+        assert len(response.choices) == 0
 
     @patch("helios.core.llm.OpenAI")
     def test_generate_none_content(
@@ -244,7 +255,8 @@ class TestOpenRouterLLM:
         llm = OpenRouterLLM(settings)
         response = llm.generate(conversation)
 
-        assert response == ""
+        assert isinstance(response, ChatCompletion)
+        assert response.choices[0].message.content is None
 
     @patch("helios.core.llm.OpenAI")
     def test_generate_streaming(
